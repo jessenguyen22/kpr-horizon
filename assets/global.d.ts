@@ -13,6 +13,9 @@ declare global {
     loadFeatures(features: ShopifyFeature[], callback?: LoadCallback): void;
     ModelViewerUI?: ModelViewer;
     visualPreviewMode: boolean;
+    PaymentButton?: {
+      init(): void;
+    };
   }
 
   interface Theme {
@@ -39,8 +42,36 @@ declare global {
     };
   }
 
+  interface SPAConfig {
+    enabled: boolean;
+    viewTransitions: boolean;
+    debug: boolean;
+    template: string;
+    currentUrl: string;
+    cacheSize: number;
+    prefetchEnabled: boolean;
+    animationStyle: string;
+  }
+
   interface Window {
     Shopify: Shopify;
+    SPA_CONFIG: SPAConfig;
+    horizonSPARouter: any;
+  }
+
+  interface Document {
+    startViewTransition?: (callback: () => Promise<void>) => Promise<void>;
+  }
+
+  interface HTMLElement {
+    connectedCallback?: () => void;
+    init?: () => void;
+    closest(selector: string): HTMLElement | null;
+    dataset: DOMStringMap;
+  }
+
+  interface EventTarget {
+    closest?(selector: string): HTMLElement | null;
   }
 
   declare const Shopify: Shopify;

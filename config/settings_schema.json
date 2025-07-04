@@ -8,6 +8,70 @@
     "theme_support_url": "https://support.shopify.com/"
   },
   {
+    "name": "SPA Navigation",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Single Page Application Features"
+      },
+      {
+        "type": "checkbox",
+        "id": "spa_navigation_enabled",
+        "label": "Enable SPA Navigation",
+        "default": true,
+        "info": "Faster page transitions without full page reloads"
+      },
+      {
+        "type": "checkbox", 
+        "id": "spa_prefetch_enabled",
+        "label": "Enable Link Prefetching",
+        "default": true,
+        "info": "Preload pages on hover for instant navigation"
+      },
+      {
+        "type": "select",
+        "id": "spa_cache_size",
+        "label": "Cache Size",
+        "options": [
+          {
+            "value": "20",
+            "label": "20 pages (Small)"
+          },
+          {
+            "value": "50",
+            "label": "50 pages (Medium)"
+          },
+          {
+            "value": "100",
+            "label": "100 pages (Large)"
+          }
+        ],
+        "default": "50",
+        "info": "Number of pages to keep in memory"
+      },
+      {
+        "type": "select",
+        "id": "spa_animation_style",
+        "label": "Page Transition Style",
+        "options": [
+          {
+            "value": "fade",
+            "label": "Fade"
+          },
+          {
+            "value": "slide",
+            "label": "Slide"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          }
+        ],
+        "default": "fade"
+      }
+    ]
+  },
+  {
     "name": "t:names.logo_and_favicon",
     "settings": [
       {

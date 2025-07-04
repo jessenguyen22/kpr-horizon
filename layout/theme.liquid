@@ -1,67 +1,155 @@
 <!doctype html>
-<html
-  class="no-js{% if request.design_mode %} shopify-design-mode{% endif %}"
-  lang="{{ request.locale.iso_code }}"
->
-  <head>
-    {%- render 'stylesheets' -%}
-
-    {%- if settings.favicon != blank -%}
+  <html
+    class="no-js{% if request.design_mode %} shopify-design-mode{% endif %}"
+    lang="{{ request.locale.iso_code }}"
+  >
+    <head>
+      {%- render 'stylesheets' -%}
+  
+      {%- if settings.favicon != blank -%}
+        <link
+          rel="icon" 
+          type="image/png"
+          href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+        >
+      {%- endif -%}
+  
+      <!-- Keep existing view transition -->
       <link
-        rel="icon"
-        type="image/png"
-        href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+        rel="expect"
+        href="#MainContent"
+        blocking="render"
+        id="view-transition-render-blocker"
       >
-    {%- endif -%}
-
-    {% comment %} This a way to wait for main content to load when navigating to a new page so that the view transitions can work consistently {% endcomment %}
-    <link
-      rel="expect"
-      href="#MainContent"
-      blocking="render"
-      id="view-transition-render-blocker"
-    >
-
-    {%- render 'meta-tags' -%}
-    {%- render 'fonts' -%}
-    {%- render 'scripts' -%}
-    {%- render 'theme-styles-variables' -%}
-    {%- render 'color-schemes' -%}
-
-    {% if request.design_mode %}
-      {%- render 'theme-editor' -%}
+  
+      <!-- SPA Detection & Response -->
+      {% if request.headers['X-Requested-With'] == 'XMLHttpRequest' %}
+        <!-- This is an AJAX/SPA request -->
+        <meta name="spa-request" content="true">
+      {% endif %}
+  
+      <!-- SPA Loading Styles -->
+      <style>
+        .spa-loading {
+          cursor: wait;
+        }
+  
+        .spa-loading-bar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, 
+            rgb(var(--color-primary)) 0%, 
+            transparent 50%, 
+            rgb(var(--color-primary)) 100%);
+          background-size: 200% 100%;
+          animation: spa-loading-slide 1s linear infinite;
+          z-index: 10000;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+        }
+  
+        .spa-loading .spa-loading-bar {
+          opacity: 1;
+        }
+  
+        @keyframes spa-loading-slide {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+  
+        @media (prefers-reduced-motion: reduce) {
+          .spa-loading-bar {
+            animation: none;
+            background: rgb(var(--color-primary));
+          }
+        }
+      </style>
+  
+      {%- render 'meta-tags' -%}
+      {%- render 'fonts' -%}
+      {%- render 'scripts' -%}
+      {%- render 'theme-styles-variables' -%}
+      {%- render 'color-schemes' -%}
+  
+      {% if request.design_mode %}
+        {%- render 'theme-editor' -%}
+      {% endif %}
+  
+      {{ content_for_header }}
+    </head>
+  
+    <!-- SPA AJAX Response: Return only content -->
+    {% if request.headers['X-Requested-With'] == 'XMLHttpRequest' %}
+      <body data-spa-response="true">
+        <div id="spa-response-data" 
+             data-title="{{ page_title | escape }}"
+             data-url="{{ request.path }}"
+             data-template="{{ template }}">
+          
+          <main id="MainContent" 
+                class="content-for-layout" 
+                role="main"
+                data-spa-content>
+            {{ content_for_layout }}
+          </main>
+          
+        </div>
+      </body>
+    {% else %}
+      <!-- Normal Page Response -->
+      <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
+        {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
+        
+        <div class="spa-loading-bar" id="spa-loading-bar"></div>
+        
+        <div id="header-group">
+          {% sections 'header-group' %}
+        </div>
+  
+        <main
+          id="MainContent"
+          class="content-for-layout"
+          role="main"
+          data-page-transition-enabled="{{ settings.page_transition_enabled }}"
+          data-product-transition="{{ settings.transition_to_main_product }}"
+          data-template="{{ template }}"
+          data-spa-content
+          data-current-url="{{ request.path }}"
+        >
+          {{ content_for_layout }}
+        </main>
+  
+        {% sections 'footer-group' %}
+  
+        {% render 'search-modal' %}
+  
+        {% # theme-check-disable ParserBlockingScript %}
+        <script src="{{ 'critical.js' | asset_url }}"></script>
+        {% # theme-check-enable ParserBlockingScript %}
+  
+        <!-- SPA Configuration -->
+        <script>
+          window.SPA_CONFIG = {
+            enabled: {{ settings.spa_navigation_enabled | default: true }},
+            viewTransitions: {{ settings.page_transition_enabled | default: true }},
+            debug: {{ request.design_mode | default: false }},
+            template: '{{ template }}',
+            currentUrl: '{{ request.path }}',
+            cacheSize: {{ settings.spa_cache_size | default: 50 }},
+            prefetchEnabled: {{ settings.spa_prefetch_enabled | default: true }},
+            animationStyle: '{{ settings.spa_animation_style | default: "fade" }}'
+          };
+        </script>
+        
+        <script src="{{ 'spa-router.js' | asset_url }}" defer></script>
+  
+        {% if settings.quick_add or settings.mobile_quick_add %}
+          {% render 'quick-add-modal' %}
+        {% endif %}
+      </body>
     {% endif %}
-
-    {{ content_for_header }}
-  </head>
-
-  <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
-    {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
-    <div id="header-group">
-      {% sections 'header-group' %}
-    </div>
-
-    <main
-      id="MainContent"
-      class="content-for-layout"
-      role="main"
-      data-page-transition-enabled="{{ settings.page_transition_enabled }}"
-      data-product-transition="{{ settings.transition_to_main_product }}"
-      data-template="{{ template }}"
-    >
-      {{ content_for_layout }}
-    </main>
-
-    {% sections 'footer-group' %}
-
-    {% render 'search-modal' %}
-
-    {% # theme-check-disable ParserBlockingScript %}
-    <script src="{{ 'critical.js' | asset_url }}"></script>
-    {% # theme-check-enable ParserBlockingScript %}
-
-    {% if settings.quick_add or settings.mobile_quick_add %}
-      {% render 'quick-add-modal' %}
-    {% endif %}
-  </body>
-</html>
+  </html>
